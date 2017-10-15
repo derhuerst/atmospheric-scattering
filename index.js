@@ -18,75 +18,75 @@ const PRIMARY_STEPS = 16
 const ORIGIN = [0, 0, 0]
 
 const defaults = {
-	rayOrigin: fromValues([0, 6372e3, 0]),
-	sunIntensity: 22,
-	planetRadius: 6371e3, // in meters
-	atmosphereRadius: 6471e3 // in meters
+  rayOrigin: fromValues([0, 6372e3, 0]),
+  sunIntensity: 22,
+  planetRadius: 6371e3, // in meters
+  atmosphereRadius: 6471e3 // in meters
 }
 
 const createScattering = (sunP, opt = {}) => { // sun position, options
-	sunP = normalize(create(), sunP)
+  sunP = normalize(create(), sunP)
 
-	opt = Object.assign({}, defaults, opt)
-	const rayO = opt.rayOrigin
-	const sunI = opt.sunIntensity
-	const planetR = opt.planetRadius
-	const atmosR = opt.atmosphereRadius
+  opt = Object.assign({}, defaults, opt)
+  const rayO = opt.rayOrigin
+  const sunI = opt.sunIntensity
+  const planetR = opt.planetRadius
+  const atmosR = opt.atmosphereRadius
 
-	const scattering = (rayD) => { // view/ray direction
-		rayD = normalize(create(), rayD) // todo: prevent GC
+  const scattering = (rayD) => { // view/ray direction
+    rayD = normalize(create(), rayD) // todo: prevent GC
 
-		// calculate step size of primary ray
-		const hit = raySphereInt([], rayO, rayD, ORIGIN, atmosR)
-		if (!hit || hit[0] > hit[1]) { // ray misses atmosphere, no light
-			return [0, 0, 0] // todo: prevent GC
-		}
-		hit[1] = Math.min(hit[1], raySphereInt([], rayO, rayD, ORIGIN, planetR)[1])
-		const pStep = (hit[1] - hit[0]) / PRIMARY_STEPS
+    // calculate step size of primary ray
+    const hit = raySphereInt([], rayO, rayD, ORIGIN, atmosR)
+    if (!hit || hit[0] > hit[1]) { // ray misses atmosphere, no light
+      return [0, 0, 0] // todo: prevent GC
+    }
+    hit[1] = Math.min(hit[1], raySphereInt([], rayO, rayD, ORIGIN, planetR)[1])
+    const pStep = (hit[1] - hit[0]) / PRIMARY_STEPS
 
-		let pTime = 0 // primary ray time
-		let totalRylh = create(0) // Rayleigh scattering accumulator
-		let totalMie = create(0) // Mie scattering accumulator
+    let pTime = 0 // primary ray time
+    let totalRylh = create(0) // Rayleigh scattering accumulator
+    let totalMie = create(0) // Mie scattering accumulator
 
-		let pOptDepRylh // optical depth accumulators for the primary ray
-		let pOptDepMie // optical depth accumulators for the primary ray
+    let pOptDepRylh // optical depth accumulators for the primary ray
+    let pOptDepMie // optical depth accumulators for the primary ray
 
-		// calculate the Rayleigh and Mie phases
-		const mu = dot(rayD, sunP)
-		const mu2 = mu * mu
-		const g2 = MIE_PREFERRED_DIRECTION * MIE_PREFERRED_DIRECTION
-		// todo: proper names
-		const _Rylh = 3 / (16 * Math.PI) * (1 + mu2)
-		const _Mie = (
-			3 / (8 * Math.PI) * (1 - g2) * (1 + mu2) /
-			Math.pow(1 + g2 - 2 * mu * MIE_PREFERRED_DIRECTION, 1.5) * (2 + g2)
-		)
+    // calculate the Rayleigh and Mie phases
+    const mu = dot(rayD, sunP)
+    const mu2 = mu * mu
+    const g2 = MIE_PREFERRED_DIRECTION * MIE_PREFERRED_DIRECTION
+    // todo: proper names
+    const _Rylh = 3 / (16 * Math.PI) * (1 + mu2)
+    const _Mie = (
+      3 / (8 * Math.PI) * (1 - g2) * (1 + mu2) /
+      Math.pow(1 + g2 - 2 * mu * MIE_PREFERRED_DIRECTION, 1.5) * (2 + g2)
+    )
 
-		// sample the primary ray
-		for (let i = 0; i < PRIMARY_STEPS; i++) {
-			// calculate the current position of the primary ray
-			const currPos = scale(create(), rayD, pTime + pStep * .5)
-			add(currPos, rayO, currPos)
+    // sample the primary ray
+    for (let i = 0; i < PRIMARY_STEPS; i++) {
+      // calculate the current position of the primary ray
+      const currPos = scale(create(), rayD, pTime + pStep * .5)
+      add(currPos, rayO, currPos)
 
-			// calculate the height of the sample
-			const currHeight = length(currPos) - planetR
+      // calculate the height of the sample
+      const currHeight = length(currPos) - planetR
 
-			// calculate optical depth of Rayleigh & Mie scattering for this step
-			const currOptDepRylh = Math.exp(-currHeight / RYLH_SCALE_HEIGHT) * pStep
-			const currOptDepMie = Math.exp(-currHeight / MIE_SCALE_HEIGHT) * pStep
+      // calculate optical depth of Rayleigh & Mie scattering for this step
+      const currOptDepRylh = Math.exp(-currHeight / RYLH_SCALE_HEIGHT) * pStep
+      const currOptDepMie = Math.exp(-currHeight / MIE_SCALE_HEIGHT) * pStep
 
-			// accumulate optical depth
-			pOptDepRylh += currOptDepRylh
-			pOptDepMie += currOptDepMie
-		}
+      // accumulate optical depth
+      pOptDepRylh += currOptDepRylh
+      pOptDepMie += currOptDepMie
+    }
 
-		// todo
+    // todo
 
-		// apply exposure
-		// return 1 - Math.exp(-color) // todo: why? what is this?
-	}
+    // apply exposure
+    // return 1 - Math.exp(-color) // todo: why? what is this?
+  }
 
-	return scattering
+  return scattering
 }
 
 module.exports = createScattering
