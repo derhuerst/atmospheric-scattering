@@ -25,6 +25,8 @@
 		"node": ">=6"
 	},
 	"dependencies": {
+		"gl-vec3": "^1.0.3",
+		"ray-sphere-intersection": "^1.0.0"
 	},
 	"devDependencies": {
 		"tap-min": "^1.2.2",
