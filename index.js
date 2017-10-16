@@ -1,11 +1,18 @@
 'use strict'
 
-const fromVals = require('gl-vec3/fromValues')
-const create = require('gl-vec3/create')
-const normalize = require('gl-vec3/normalize')
-const add = require('gl-vec3/add')
-const length = require('gl-vec3/length')
-const scaleAndAdd = require('gl-vec3/scaleAndAdd')
+const {
+  fromValues: fromVals,
+  create,
+  normalize,
+  add,
+  length,
+  multiply,
+  dot,
+  scale,
+  set,
+  negate,
+  scaleAndAdd
+} = require('gl-vec3')
 const raySphereInt = require('ray-sphere-intersection')
 
 const RYLH_SCATTERING = fromVals(5.5e-6, 13e-6, 22.4e-6) // Rayleigh scat. coefficient
@@ -102,7 +109,7 @@ const createScattering = (sunP, opt = {}) => { // sun position, options
         sTime += sStep
       }
 
-      // calculate attenuation
+      // calculate attenuation, store in tmpv1
       // exp(-(
       //   MIE_SCATTERING * (pOptDepMie + sOptDepMie) +
       //   RYLH_SCATTERING * (pOptDepRylh + sOptDepRylh)
@@ -112,13 +119,13 @@ const createScattering = (sunP, opt = {}) => { // sun position, options
       scale(tmpv2, RYLH_SCATTERING, pOptDepRylh + sOptDepRylh)
       add(tmpv1, tmpv1, tmpv2)
       negate(tmpv1, tmpv1) // todo: this can be optimised
-      // todo: exp, assign to `attenuation`
+      // todo: exp
 
       // accumulate scattering
       // totalRylh += currOptDepRylh * attenuation
-      scaleAndAdd(totalRylh, totalRylh, attenuation, currOptDepRylh)
+      scaleAndAdd(totalRylh, totalRylh, tmpv1, currOptDepRylh)
       // totalMie += currOptDepMie * attenuation
-      scaleAndAdd(totalMie, totalMie, attenuation, currOptDepMie)
+      scaleAndAdd(totalMie, totalMie, tmpv1, currOptDepMie)
 
       // increment primary ray time
       pTime += pStep
