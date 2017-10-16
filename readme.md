@@ -1,6 +1,6 @@
 # atmospheric-scattering
 
-**Compute Rayleigh & Mie scattering to render sky colors.**
+**Compute Rayleigh & Mie scattering to render sky colors.** Ported to plain JS from [`glsl-atmosphere`](https://github.com/wwwtyro/glsl-atmosphere). Work in progess, there are still lots of bugs.
 
 [![npm version](https://img.shields.io/npm/v/atmospheric-scattering.svg)](https://www.npmjs.com/package/atmospheric-scattering)
 [![build status](https://img.shields.io/travis/derhuerst/atmospheric-scattering.svg)](https://travis-ci.org/derhuerst/atmospheric-scattering)
@@ -11,7 +11,7 @@
 ## Installing
 
 ```shell
-npm install -g atmospheric-scattering
+npm install atmospheric-scattering
 ```
 
 
